@@ -1,44 +1,50 @@
-const ipfs = window.IpfsHttpClient('https://ipfs.infura.io:5001'); // Connecting to IPFS via Infura
-let fileBuffer = null;
-let fileHash = '';
-const fileInput = document.getElementById('fileInput');
-const passwordInput = document.getElementById('password');
-const statusText = document.getElementById('status');
+// Initialize IPFS with Infura as the gateway
+const ipfsUrl = 'https://ipfs.infura.io:5001/api/v0';
 
-// File encryption using CryptoJS (AES-256)
-function encryptFile(fileBuffer, password) {
-    const wordArray = CryptoJS.lib.WordArray.create(fileBuffer);
-    return CryptoJS.AES.encrypt(wordArray, password).toString();
+// Function to convert a file to an ArrayBuffer
+function fileToArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+    });
 }
 
-// Read the file from the input
-fileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const arrayBuffer = e.target.result;
-        const password = passwordInput.value;
+// Function to upload encrypted file to IPFS
+async function uploadFile() {
+    const fileInput = document.getElementById('fileInput').files[0];
+    const encryptionKey = document.getElementById('encryptionKey').value;
 
-        if (!password) {
-            alert('Enter a password for encryption');
-            return;
-        }
+    if (!fileInput || !encryptionKey) {
+        alert('Please select a file and enter an encryption key.');
+        return;
+    }
 
-        const encryptedFile = encryptFile(arrayBuffer, password);
-        statusText.textContent = "File encrypted, now uploading to IPFS...";
+    try {
+        // Convert file to ArrayBuffer
+        const arrayBuffer = await fileToArrayBuffer(fileInput);
+        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
 
-        // Convert encrypted file string to a Blob
-        const blob = new Blob([encryptedFile], { type: 'text/plain' });
+        // Encrypt file using AES-256
+        const encrypted = CryptoJS.AES.encrypt(wordArray, encryptionKey).toString();
+
+        // Upload encrypted file to IPFS using Infura
+        const formData = new FormData();
+        formData.append('file', new Blob([encrypted]));
+
+        const response = await fetch(`${ipfsUrl}/add`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
         
-        // Upload encrypted file to IPFS
-        const added = await ipfs.add(blob);
-        fileHash = added.path;
-        document.getElementById('fileHash').value = fileHash;
+        // Display IPFS hash
+        document.getElementById('fileHash').innerText = data.Hash;
 
-        statusText.textContent = "File uploaded to IPFS with hash: " + fileHash;
-    };
-    reader.readAsArrayBuffer(file);
-});
-
-// File sending and retrieving will be based on IPFS hashes.
-// Use the generated IPFS hash to retrieve the file from IPFS.
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('File upload failed.');
+    }
+}
