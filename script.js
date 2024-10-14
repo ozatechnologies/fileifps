@@ -1,9 +1,16 @@
 let ipfs;
 
-// Initialize IPFS Node
+// Initialize IPFS with Infura
 async function initIPFS() {
-    ipfs = await IPFS.create();
-    console.log('IPFS node initialized');
+    ipfs = await IPFS.create({
+        host: 'ipfs.infura.io',
+        port: 5001,
+        protocol: 'https',
+        headers: {
+            authorization: `Basic ${btoa('c8cf2d9a58c0412f86b8d0681f785907')}` // Your Infura API key
+        }
+    });
+    console.log('IPFS node initialized via Infura');
 }
 
 // Convert file to ArrayBuffer
@@ -34,7 +41,7 @@ async function uploadFile() {
         // Encrypt file using AES
         const encrypted = CryptoJS.AES.encrypt(wordArray, encryptionKey).toString();
 
-        // Upload encrypted file to IPFS (directly without public gateways)
+        // Upload encrypted file to IPFS via Infura
         const { cid } = await ipfs.add(encrypted);
 
         // Show the IPFS hash
