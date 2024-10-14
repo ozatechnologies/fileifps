@@ -1,7 +1,12 @@
-// Initialize IPFS with Infura as the gateway
-const ipfsUrl = 'https://ipfs.infura.io:5001/api/v0';
+let ipfs;
 
-// Function to convert a file to an ArrayBuffer
+// Initialize IPFS Node
+async function initIPFS() {
+    ipfs = await IPFS.create();
+    console.log('IPFS node initialized');
+}
+
+// Convert file to ArrayBuffer
 function fileToArrayBuffer(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -11,7 +16,7 @@ function fileToArrayBuffer(file) {
     });
 }
 
-// Function to upload encrypted file to IPFS
+// Encrypt and upload file to IPFS
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput').files[0];
     const encryptionKey = document.getElementById('encryptionKey').value;
@@ -22,29 +27,26 @@ async function uploadFile() {
     }
 
     try {
-        // Convert file to ArrayBuffer
+        // Convert file to array buffer
         const arrayBuffer = await fileToArrayBuffer(fileInput);
         const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
 
-        // Encrypt file using AES-256
+        // Encrypt file using AES
         const encrypted = CryptoJS.AES.encrypt(wordArray, encryptionKey).toString();
 
-        // Upload encrypted file to IPFS using Infura
-        const formData = new FormData();
-        formData.append('file', new Blob([encrypted]));
+        // Upload encrypted file to IPFS (directly without public gateways)
+        const { cid } = await ipfs.add(encrypted);
 
-        const response = await fetch(`${ipfsUrl}/add`, {
-            method: 'POST',
-            body: formData,
-        });
-
-        const data = await response.json();
-        
-        // Display IPFS hash
-        document.getElementById('fileHash').innerText = data.Hash;
+        // Show the IPFS hash
+        document.getElementById('fileHash').innerText = cid.toString();
 
     } catch (error) {
         console.error('Error uploading file:', error);
         alert('File upload failed.');
     }
 }
+
+// Initialize the IPFS node on page load
+window.onload = () => {
+    initIPFS();
+};
