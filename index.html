@@ -5,24 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decentralized File Sharing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/ipfs/dist/index.min.js"></script>
 </head>
 <body>
-    <h1>Decentralized File Sharing with Encryption</h1>
+    <h1>Decentralized File Sharing (P2P)</h1>
     
-    <!-- File input -->
     <input type="file" id="fileInput" />
-    
-    <!-- Encryption key input -->
-    <input type="text" id="encryptionKey" placeholder="Enter encryption key" />
-    
-    <!-- Upload button -->
+    <input type="text" id="encryptionKey" placeholder="Encryption Key" />
     <button onclick="uploadFile()">Upload File</button>
-    
-    <!-- Display file hash -->
-    <div>
-        <h2>IPFS Hash:</h2>
-        <p id="fileHash"></p>
-    </div>
+
+    <h3>IPFS Hash:</h3>
+    <p id="fileHash"></p>
 
     <script src="script.js"></script>
 </body>
