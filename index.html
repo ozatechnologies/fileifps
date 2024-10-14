@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decentralized P2P File Sharing</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Decentralized File Sharing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Decentralized Peer-to-Peer File Sharing with Encryption</h1>
-        
-        <input type="file" id="fileInput" />
-        <input type="text" id="password" placeholder="Enter a password for encryption" />
-        
-        <button id="sendFileBtn">Send File</button>
-        <textarea id="fileHash" placeholder="File Hash from IPFS"></textarea>
-
-        <p id="status"></p>
-    </div>
-
-    <!-- CryptoJS via CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <h1>Decentralized File Sharing with Encryption</h1>
     
-    <!-- IPFS JavaScript CDN -->
-    <script src="https://unpkg.com/ipfs-http-client/dist/index.min.js"></script>
+    <!-- File input -->
+    <input type="file" id="fileInput" />
+    
+    <!-- Encryption key input -->
+    <input type="text" id="encryptionKey" placeholder="Enter encryption key" />
+    
+    <!-- Upload button -->
+    <button onclick="uploadFile()">Upload File</button>
+    
+    <!-- Display file hash -->
+    <div>
+        <h2>IPFS Hash:</h2>
+        <p id="fileHash"></p>
+    </div>
 
     <script src="script.js"></script>
 </body>
