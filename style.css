@@ -1,0 +1,85 @@
+const peerConnection = new RTCPeerConnection();
+let dataChannel;
+let fileBuffer = null;
+
+// HTML elements
+const fileInput = document.getElementById('fileInput');
+const passwordInput = document.getElementById('password');
+const offerTextarea = document.getElementById('offer');
+const answerTextarea = document.getElementById('answer');
+const statusText = document.getElementById('status');
+
+// Create Data Channel
+dataChannel = peerConnection.createDataChannel("fileChannel");
+
+// File encryption using CryptoJS
+function encryptFile(fileBuffer, password) {
+    const wordArray = CryptoJS.lib.WordArray.create(fileBuffer);
+    return CryptoJS.AES.encrypt(wordArray, password).toString();
+}
+
+// File decryption
+function decryptFile(encryptedData, password) {
+    const decrypted = CryptoJS.AES.decrypt(encryptedData, password);
+    return CryptoJS.enc.Utf8.stringify(decrypted);
+}
+
+// Read the file and encrypt it
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        fileBuffer = e.target.result;
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+// Create WebRTC Offer
+document.getElementById('createOfferBtn').addEventListener('click', async () => {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    offerTextarea.value = JSON.stringify(offer);
+});
+
+// Accept WebRTC Answer
+document.getElementById('acceptAnswerBtn').addEventListener('click', async () => {
+    const answer = JSON.parse(answerTextarea.value);
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+});
+
+// Send file to peer
+document.getElementById('sendFileBtn').addEventListener('click', () => {
+    const password = passwordInput.value;
+    if (!fileBuffer || !password) {
+        alert('Select a file and enter a password');
+        return;
+    }
+
+    const encryptedFile = encryptFile(fileBuffer, password);
+    dataChannel.send(encryptedFile);
+    statusText.textContent = "File sent!";
+});
+
+// Handle incoming connection and data
+peerConnection.ondatachannel = (event) => {
+    const receiveChannel = event.channel;
+    receiveChannel.onmessage = (event) => {
+        const password = prompt("Enter the password to decrypt the file:");
+        const decryptedFile = decryptFile(event.data, password);
+        statusText.textContent = "File received!";
+        
+        // Create a link to download the file
+        const blob = new Blob([decryptedFile], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'decrypted-file';
+        link.click();
+    };
+};
+
+// Handle ICE candidates
+peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+        // Send the candidate to the remote peer
+    }
+};
